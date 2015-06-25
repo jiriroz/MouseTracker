@@ -1,29 +1,3 @@
-<!DOCTYPE html>
-<html id="html" onclick="storeClick(event)" onmousemove="storeMove(event)">
-<head>
-<title>App</title>
-</head>
-
-<body>
-
-<p>Click anywhere</p>
-<br>
-
-<b>
-<a>Link 1</a>
-<br>
-<br>
-<a>Link 2</a>
-<br>
-<br>
-<a>Link 3</a>
-<br>
-</b>
-<p id="output">0</p>
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-
-<script>
 
 var mouseX;
 var mouseY;
@@ -181,15 +155,10 @@ var getDistance = function (p1, p2) {
                      Math.pow(p1[1] - p2[1], 2));
 };
 
-
 var clickLink = function (element) {
    element.click();
 };
 
-</script>
-
-
-<script>
 /*jQuery*/
 
 $(document).ready(function(){
@@ -209,8 +178,3 @@ $(document).ready(function(){
         });
     });
 });
-</script>
-
-</body>
-
-</html>

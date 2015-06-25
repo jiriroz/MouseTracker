@@ -3,6 +3,22 @@ var fs = require('fs');
 var url = require('url');
 var mongojs = require('mongojs');
 
+var uri = "mongodb://localhost:8001/database";
+
+var db = mongojs.connect(uri,["inventory"]);
+
+doc = db.inventory.find({});
+
+fs.writeFile("log.txt", "", function(err) {
+    if (err) {
+        return console.log(err);
+    } else {
+        console.log("Log created.");
+    }
+});
+//handle the case when data is received before the file is created
+
+
 http.createServer(function(request, response){
     var path = url.parse(request.url).pathname;
     if (request.method == 'GET') {
@@ -10,8 +26,7 @@ http.createServer(function(request, response){
         if (path == '/') {
             fs.readFile('./index.html', function(err, file) {
                 if(err) {
-                    // write an error response or nothing here  
-                    return;
+                    return console.log(err);
                 }
                 response.writeHead(200, { 'Content-Type': 'text/html' });
                 response.end(file, "utf-8");
@@ -27,7 +42,14 @@ http.createServer(function(request, response){
                 request.connection.destroy();
         });
         request.on('end', function () {
-            console.log(JSON.parse(body));
+            var jsonData = JSON.parse(body);
+            fs.appendFile("log.txt", body + "\n", function(err) {
+                if (err) {
+                    return console.log(err);
+                } else {
+                    console.log("Data written.");
+                }
+            });
         });
         response.writeHead(200, {"Content-Type": "text/plain"});
         response.end("");

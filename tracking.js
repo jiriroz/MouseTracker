@@ -1,28 +1,4 @@
-<!DOCTYPE html>
-<html id="html" onclick="storeClick(event)" onmousemove="storeMove(event)">
-<head>
-<title>App</title>
-</head>
-
-<body>
-
-<p>Click anywhere</p>
-<br>
-
-<b>
-<a>Link 1</a>
-<br>
-<br>
-<a>Link 2</a>
-<br>
-<br>
-<a>Link 3</a>
-<br>
-</b>
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-
-<script>
+console.log("Script loaded");
 
 //track info
 var CLICKS = [];
@@ -101,13 +77,3 @@ $(document).ready(function(){
         });
     });
 });
-
-</script>
-
-<!--
-<script src="file:///home/jiri/Code/MouseTracker/tracking.js"></script>
--->
-
-</body>
-
-</html>

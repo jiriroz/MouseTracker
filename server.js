@@ -1,13 +1,23 @@
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
-var mongojs = require('mongojs');
+/*var assert = require('assert');
+var MongoClient = require('mongodb').MongoClient;
 
-var uri = "mongodb://localhost:8001/database";
+var dburl = 'mongodb://localhost:27017/database';
 
-var db = mongojs.connect(uri,["inventory"]);
+var DB;
+var collection;
 
-doc = db.inventory.find({});
+MongoClient.connect(dburl, function(err, db) {
+    if(err) {
+        return console.log(err);
+    } else {
+        console.log("connected");
+        DB = db;
+        collection = db.collection("test");
+    }
+});*/
 
 fs.writeFile("log.txt", "", function(err) {
     if (err) {
@@ -20,17 +30,22 @@ fs.writeFile("log.txt", "", function(err) {
 
 
 http.createServer(function(request, response){
-    var path = url.parse(request.url).pathname;
+    var parsed = url.parse(request.url);
     if (request.method == 'GET') {
         console.log("GET request recieved");
-        if (path == '/') {
+        if (parsed.pathname == '/') {
             fs.readFile('./index.html', function(err, file) {
                 if(err) {
                     return console.log(err);
                 }
-                response.writeHead(200, { 'Content-Type': 'text/html' });
-                response.end(file, "utf-8");
+            response.writeHead(200, { 'Content-Type': 'text/html' });
+            response.end(file, "utf-8");
             });
+        }
+        if (parsed.pathname == "//getid") {
+            var id = Math.floor(Math.random() * 1000); //for now random
+            response.writeHead(200, {'Content-Type': 'text/plain'});
+            response.end(id.toString(), "utf-8");
         }
     }
     if (request.method == 'POST') {
@@ -43,11 +58,19 @@ http.createServer(function(request, response){
         });
         request.on('end', function () {
             var jsonData = JSON.parse(body);
-            fs.appendFile("log.txt", body + "\n", function(err) {
+            var moves = jsonData["moves"];
+            var save = "";
+            for (var i = 0; i < moves.length; i++) {
+                var line = moves[i][0] + " " + moves[i][1] + " " +
+                           moves[i][2] + "\n";
+                save += line;
+            }
+            console.log(save);
+            fs.appendFile("log.txt", save, function(err) {
                 if (err) {
                     return console.log(err);
                 } else {
-                    console.log("Data written.");
+                    //console.log("Data written.");
                 }
             });
         });

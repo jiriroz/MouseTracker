@@ -24,6 +24,21 @@
 
 <script>
 
+var ID;
+
+function getID() {
+    var req = new XMLHttpRequest();
+    req.open("GET","http://localhost:8001//getid", true);
+    req.onreadystatechange = function() {
+        if (req.readyState == 4 && req.status == 200) {
+            ID = parseInt(req.responseText);
+        }
+    }
+    req.send();
+}
+
+getID();
+
 //track info
 var CLICKS = [];
 var MOVES = [];

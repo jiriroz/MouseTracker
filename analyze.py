@@ -4,6 +4,7 @@ Analyze mouse trajectory data.
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import numpy as np
 import csv
 import sys
 
@@ -33,9 +34,18 @@ def showMoves(data, ID, subplot):
         y.append(point[1])
     subplot.plot(x,y,lw=1,color='#000066')
 
-def displayData():
+#shows interest heatmap based on mouse moves
+def showInterestMap(data, ID, subplot, width, height):
+    heatmap = np.zeros((height, width))
+    for point in data[ID]['m']:
+        x = point[0]
+        y = point[1]
+        #creare some kind of a mask?
+
+def visualize():
     imfile = sys.argv[1]
     image = mpimg.imread(imfile)
+    width, height = len(image[0]), len(image)
 
     data = loadData()
     keys = data.keys()
@@ -51,4 +61,4 @@ def displayData():
     fig.tight_layout()
     plt.savefig('fig.png', bbox_inches='tight')
 
-displayData()
+visualize()

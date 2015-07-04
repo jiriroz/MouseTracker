@@ -81,11 +81,11 @@ function saveData(data) {
         body += line;
     }
     for (var i = 0; i < data["scrolls"].length; i++) {
-        var line = "-,-," + data["scrolls"][i][0] + ",s," + id + "\n";
+        var line = "-1,-1," + data["scrolls"][i][0] + ",s," + id + "\n";
         body += line;
     }
     for (var i = 0; i < data["hovers"].length; i++) {
-        var line = data["hovers"][i][0] + ",-," + data["hovers"][i][1] + 
+        var line = data["hovers"][i][0] + ",-1," + data["hovers"][i][1] + 
                    ",h," + id + "\n";
         body += line;
     }

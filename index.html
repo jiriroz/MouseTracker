@@ -48,7 +48,7 @@ var LINKS_HOVERED = [];
 //Send an ajax request every 5 seconds.
 window.setInterval(function(){ //setTimeout also works
     var obj = {"clicks":CLICKS,"moves":MOVES,"scrolls":SCROLLS,
-               "hovers":LINKS_HOVERED};
+               "hovers":LINKS_HOVERED,id:ID};
     post(JSON.stringify(obj));
     CLICKS = [];
     MOVES = [];

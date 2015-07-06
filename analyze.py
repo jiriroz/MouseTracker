@@ -4,19 +4,27 @@ Analyze mouse trajectory data.
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import matplotlib.cm as cm
 import numpy as np
+from PIL import Image
 import csv
 import sys
 
 def loadData():
     data = dict()
+    fraction = 5
     with open('log.csv', 'rb') as datafile:
         reader = csv.reader(datafile, delimiter = ",")
         reader.next() #skip first line
+        moves = 0
         for line in reader:
             ID = int(line[4])
             if ID not in data:
                 data[ID] = {"m":[],"c":[],"h":[],"s":[]}
+            if line[3] == 'm':
+                moves += 1
+                if moves % fraction != 0:
+                    continue
             data[ID][line[3]].append([int(line[0]),int(line[1]),int(line[2])])
     return data
 
@@ -35,17 +43,60 @@ def showMoves(data, ID, subplot):
     subplot.plot(x,y,lw=1,color='#000066')
 
 #shows interest heatmap based on mouse moves
-def showInterestMap(data, ID, subplot, width, height):
-    heatmap = np.zeros((height, width))
-    for point in data[ID]['m']:
-        x = point[0]
-        y = point[1]
-        #creare some kind of a mask?
+def showInterestMap(data, ID, subplot, width, height, dx, dy):
+    heatmap = computeInterestMap(data[ID]['m'], width, height, dx, dy)
+    subplot.imshow(heatmap, cmap=cm.jet, alpha=0.5)
+    return heatmap
+
+#computes interest heatmap for one session
+def computeInterestMap(moves, width, height, dx, dy):
+    alpha = 0.5
+    beta = 1
+    heatmap = np.zeros((height/dy, width/dx))
+    for i in range(len(heatmap[0])):
+        for j in range(len(heatmap)):
+            total = 0
+            for point in moves:
+                dist = getDistance(i*dx,j*dy,point[0],point[1])
+                if dist == 0:
+                    dist = 0.01
+                total += 1/(dist**alpha)
+            heatmap[j][i] += total
+    heatmap *= beta
+    img = Image.fromarray(heatmap)
+    img = img.resize((width, height), Image.BILINEAR)
+    heatmap = np.asarray(img)
+    return heatmap
+
+def getDistance(x1,y1,x2,y2):
+    return ((x1-x2)**2 + (y1-y2)**2)**0.5
+
+def showInterestPoints(subplot, heatmap, dx, dy):
+    points = computeInterestPoints(heatmap)
+    x,y = [],[]
+    for pt in points:
+        x.append(pt[0])
+        y.append(pt[1])
+    subplot.plot(x,y,linestyle='None',marker='o',color='black',mew=3)
+
+"""
+Compute interest points (local minima) with gradient
+"""
+def computeInterestPoints(heatmap):
+    grad = np.gradient(heatmap)
+    points = []
+    for row in range(len(heatmap)):
+        for col in range(len(heatmap[0])):
+            if heatmap[row][col] == 0:
+                points.append([row, col])
+    print len(points)
+    return points
 
 def visualize():
     imfile = sys.argv[1]
     image = mpimg.imread(imfile)
     width, height = len(image[0]), len(image)
+    dx, dy = 10, 10 #spacing of the heatmap
 
     data = loadData()
     keys = data.keys()
@@ -57,8 +108,10 @@ def visualize():
 
     showClicks(data, keys[0], sub)
     showMoves(data, keys[0], sub)
-
     fig.tight_layout()
+    heatmap = showInterestMap(data,keys[0],sub,width,height,dx,dy)
+    showInterestPoints(sub, heatmap, dx, dy)
     plt.savefig('fig.png', bbox_inches='tight')
+    plt.show()
 
 visualize()

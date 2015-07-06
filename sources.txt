@@ -1,0 +1,12 @@
+our system:
+tracks user clicks, movements, scrolls, hovers over links
+analyzes movements
+
+cheese - tracks user clicks and movements to analyze user interest on the webpage
+
+knowing - detects user activity 
+
+
+knowing, (mouseTracker), (re-authentication), can I include commercial applications?
+
+

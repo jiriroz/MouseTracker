@@ -18,7 +18,9 @@ MongoClient.connect(dburl, function(err, db) {
     }
 });*/
 
-createLog();
+var overwrite = true;
+
+createLog(overwrite);
 
 http.createServer(function(request, response){
     var parsed = url.parse(request.url);
@@ -57,14 +59,16 @@ http.createServer(function(request, response){
 }).listen(8001);
 console.log("server initialized");
 
-function createLog() {
-    fs.writeFile("log.csv", "x,y,t,type,id\n", function(err) {
-        if (err) {
-            return console.log(err);
-        } else {
-            console.log("Log created.");
-        }
-    });
+function createLog(overwrite) {
+    if (overwrite) {
+        fs.writeFile("log.csv", "x,y,t,type,id\n", function(err) {
+            if (err) {
+                return console.log(err);
+            } else {
+                console.log("Log created.");
+            }
+        });
+    }
 }
 
 function saveData(data) {

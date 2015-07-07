@@ -43,7 +43,7 @@ def showClicks(data, keys, subplot):
         for click in data[ID]['c']:
             x.append(click[0])
             y.append(click[1])
-    subplot.plot(x,y,linestyle='None',marker='x',color='red',mew=2)
+    subplot.plot(x,y,linestyle='None',marker='x',color='red',mew=3, ms=10)
 
 def showMoves(data, keys, subplot):
     x,y = [],[]
@@ -59,7 +59,7 @@ def showInterestMap(data, keys, subplot, width, height, dx, dy):
     for ID in keys:
         moves += data[ID]['m']
     heatmap = computeInterestMap(moves, width, height, dx, dy)
-    subplot.imshow(heatmap, cmap=cm.jet, alpha=0.5)
+    subplot.imshow(heatmap, cmap=cm.jet, alpha=0.7)
     return heatmap
 
 #computes interest heatmap for one session
@@ -73,7 +73,7 @@ def computeInterestMap(moves, width, height, dx, dy):
             for point in moves:
                 dist = getDistance(i*dx,j*dy,point[0],point[1])
                 if dist == 0:
-                    dist = 0.01
+                    dist = 1
                 total += 1/(dist**alpha)
             heatmap[j][i] += total
     heatmap *= beta
@@ -100,7 +100,6 @@ def computeInterestPoints(heatmap):
     grad = np.gradient(heatmap)
     points = []
     for row in range(len(grad[0])):
-        #print min(grad[row])
         for col in range(len(grad[0])):
             if grad[0][row][col] == 0 and grad[1][row][col] == 0:
                 points.append([row, col])
@@ -129,7 +128,7 @@ def visualize():
     sub.imshow(image)
 
     #IDs to compute the features for
-    ids = [keys[0]]
+    ids = [keys[4]]
     if compall:
         ids = keys
 

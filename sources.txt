@@ -1,12 +1,22 @@
 our system:
 tracks user clicks, movements, scrolls, hovers over links
 analyzes movements
+Our system is not intrusive but it perceptible by the user.
 
 cheese - tracks user clicks and movements to analyze user interest on the webpage
 
-knowing - detects user activity 
+knowing - detects user activity with an HTTP proxy that adds a javascript code to the page
+
+mouseTracker - software package that stores mouse trajectory and does all sorts of analysis, like velocity, acceleration, complexity, spacial attraction
+
+goecks - records user behavior through a plugin
+
+knowing, (mouseTracker), can I include commercial applications?
 
 
-knowing, (mouseTracker), (re-authentication), can I include commercial applications?
+In the past there have been many applications with mouse tracking and analysis. Some of them were build to serve a specific purpose (e.g. a psychological experiment), while others were more general. Cheese [1] tracks user clicks and movements to analyze user interest on the web page. Atterer et al [2] detects user activity with an HTTP proxy that adds a javascript code to the page. MouseTracker [3] is a software package that stores mouse trajectory and analyses many of its properties, for example its velocity, acceleration, complexity, and spacial attraction. Goecks & Shavlik [4] record user behavior through a browser plugin. Our system is not intrusive and does not require any installation, it is however perceptible by the user.
 
-
+1.Mueller, Florian, and Andrea Lockerd. "Cheese: tracking mouse movement activity on websites, a tool for user modeling." CHI'01 extended abstracts on Human factors in computing systems. ACM, 2001.
+2.Atterer, Richard, Monika Wnuk, and Albrecht Schmidt. "Knowing the user's every move: user activity tracking for website usability evaluation and implicit interaction." Proceedings of the 15th international conference on World Wide Web. ACM, 2006.
+3.Freeman, Jonathan B., and Nalini Ambady. "MouseTracker: Software for studying real-time mental processing using a computer mouse-tracking method." Behavior Research Methods 42.1 (2010): 226-241.
+4.Goecks, Jeremy, and Jude Shavlik. "Learning users' interests by unobtrusively observing their normal behavior." Proceedings of the 5th international conference on Intelligent user interfaces. ACM, 2000.

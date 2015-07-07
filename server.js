@@ -18,7 +18,7 @@ MongoClient.connect(dburl, function(err, db) {
     }
 });*/
 
-var overwrite = true;
+var overwrite = false;
 
 createLog(overwrite);
 

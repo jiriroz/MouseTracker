@@ -10,7 +10,7 @@ siteImage - image of the website to draw the visualization on
 -sm - show stress map
 -sg - show stress graph
 -all - compute the features for all sessions
-Need to choose -im in order to choose -ip.
+id=num - compute features for a particular ID. Can choose multiple IDs.
 """
 
 import matplotlib.pyplot as plt
@@ -20,12 +20,72 @@ import numpy as np
 from PIL import Image
 import csv
 import sys
+import random
 
-def loadData():
+"""
+Main program. Requires file log.csv and 
+for certain visualizations file site.png.
+"""
+def visualize():
+    datafile = "log.csv"
+    imfile = "site.png"
+    comdOptions = sys.argv[1:]
+    optionsMap = {'-c':'clicks','-m':'moves','-im':'intrmap',
+                  '-ip':'intrpts','-all':'compall','-sm':'stressMap',
+                  '-sg':'stressGraph'}
+    options = {optionsMap[key]:(key in comdOptions) for key in optionsMap}
+    myIDs = []
+    for opt in comdOptions:
+        keyval = opt.split("=")
+        if keyval[0] == 'id':
+            myIDs.append(int(keyval[1]))
+
+    image = mpimg.imread(imfile)
+    width, height = len(image[0]), len(image)
+    dx, dy = 10, 10 #spacing of the heatmap
+
+    showMainFig = any([options[key] for key in options
+                      if key != 'stressGraph'])
+    data = loadData(datafile)
+    keys = data.keys()
+
+    if showMainFig:
+        fig = plt.figure()
+        sub = fig.add_subplot(1,1,1)
+        plt.axis('off')
+        sub.imshow(image)
+
+    #IDs to compute the features
+    ids = [keys[4]]
+    if len(myIDs) > 0:
+        ids = myIDs
+    if options['compall']:
+        ids = keys
+    if options['clicks']:
+        showClicks(data, ids, sub)
+    if options['moves']:
+        showMoves(data, ids, sub)
+    if options['intrmap'] or options['intrpts']:
+        heatmap = computeInterestMap(data, ids, width, height, dx, dy)
+    if options['intrmap']:
+        showInterestMap(sub, heatmap, width, height)
+    if options['intrpts']:
+        showInterestPoints(sub, heatmap, dx, dy)
+    if options['stressMap']:
+        showStressMap()
+    if options['stressGraph']:
+        showStressGraph()
+    if showMainFig:
+        fig.tight_layout()
+        plt.savefig('fig.png', bbox_inches='tight')
+    plt.show()
+
+def loadData(datafile):
     data = dict()
-    fractionOfMoves = 1
-    with open('log.csv', 'rb') as datafile:
-        reader = csv.reader(datafile, delimiter = ",")
+    #take only certain fraction of moves to speed up the computation
+    fractionOfMoves = 3
+    with open(datafile, 'rb') as df:
+        reader = csv.reader(df, delimiter = ",")
         reader.next() #skip first line
         moves = 0
         for line in reader:
@@ -39,6 +99,9 @@ def loadData():
             data[ID][line[3]].append([int(line[0]),int(line[1]),int(line[2])])
     return data
 
+"""
+Show mouse clicks on the image of the site.
+"""
 def showClicks(data, keys, subplot):
     x,y = [],[]
     for ID in keys:
@@ -47,6 +110,9 @@ def showClicks(data, keys, subplot):
             y.append(click[1])
     subplot.plot(x,y,linestyle='None',marker='x',color='red',mew=3, ms=10)
 
+"""
+Show mouse moves on the image of the site.
+"""
 def showMoves(data, keys, subplot):
     x,y = [],[]
     for ID in keys:
@@ -56,21 +122,13 @@ def showMoves(data, keys, subplot):
     subplot.plot(x,y,lw=1,color='#000066')
 
 """
-shows interest heatmap based on mouse moves
+computes interest heatmap for a set of moves.
 """
-def showInterestMap(data, keys, subplot, width, height, dx, dy):
+def computeInterestMap(data, ids, width, height, dx, dy):
     moves = []
-    for ID in keys:
+    for ID in ids:
         moves += data[ID]['m']
-    heatmap = computeInterestMap(moves, width, height, dx, dy)
-    subplot.imshow(heatmap, cmap=cm.jet, alpha=0.7)
-    return heatmap
-
-"""
-computes interest heatmap for one session
-"""
-def computeInterestMap(moves, width, height, dx, dy):
-    alpha = 0.5
+    distanceFactor = 0.5
     heatmap = np.zeros((height/dy, width/dx))
     for i in range(len(heatmap[0])):
         for j in range(len(heatmap)):
@@ -79,40 +137,69 @@ def computeInterestMap(moves, width, height, dx, dy):
                 dist = getDistance(i*dx,j*dy,point[0],point[1])
                 if dist == 0:
                     dist = 1
-                total += 1/(dist**alpha)
+                total += 1/(dist ** distanceFactor)
             heatmap[j][i] += total
-    img = Image.fromarray(heatmap)
-    img = img.resize((width, height), Image.BILINEAR)
-    heatmap = np.asarray(img)
     return heatmap
 
 def getDistance(x1,y1,x2,y2):
     return ((x1-x2)**2 + (y1-y2)**2)**0.5
 
 """
+Shows interest heatmap based on mouse moves.
+"""
+def showInterestMap(subplot, heatmap, width, height):
+    img = Image.fromarray(heatmap)
+    img = img.resize((width, height), Image.BILINEAR)
+    heatmap = np.asarray(img)
+    subplot.imshow(heatmap, cmap=cm.jet, alpha=0.6)
+
+"""
 Show interest points for either one or multiple sessions.
 """
 def showInterestPoints(subplot, heatmap, dx, dy):
-    points = computeInterestPoints(heatmap)
-    x,y = [],[]
+    computeInterestPoints(heatmap, subplot)
+    """x, y = [], []
     for pt in points:
-        x.append(pt[0])
-        y.append(pt[1])
-    subplot.plot(x,y,linestyle='None',marker='o',color='black',mew=3)
+        x.append(x*dx)
+        y.append(y*dy)
+    print len(x)
+    subplot.plot(x,y,linestyle='None',marker='o',color='black',mew=2)
+    """
 
 """
 Compute interest points (local minima) with gradient.
 Need to finish.
 """
-def computeInterestPoints(heatmap):
-    grad = np.gradient(heatmap)
-    points = []
-    for row in range(len(grad[0])):
-        for col in range(len(grad[0])):
-            if grad[0][row][col] == 0 and grad[1][row][col] == 0:
-                points.append([row, col])
-    print len(points)
-    return points
+def computeInterestPoints(heatmap, subplot):
+    """
+    for i in range(10):
+        x = random.randint(0,96)
+        y = random.randint(0,66)
+        gradientDescent(heatmap, 40, 30, 1, subplot)
+    """
+    gradientDescent(heatmap, 27, 20, 5, subplot)
+
+#just experimenting
+def gradientDescent(heatmap, startX, startY, step, subplot):
+    gradient = np.gradient(heatmap)
+    gradientX, gradientY = gradient[1], gradient[0]
+    X, Y = startX, startY
+    prevX, prevY, prevvX, prevvY = -1, -1, -1, -1
+    stop = False
+    i = 0
+    color = (random.random(), random.random(), random.random())
+    while not stop:
+        i += 1
+        gx, gy = gradientX[X][Y], gradientY[X][Y]
+        print X, Y, gx, gy
+        X += int(gx * step)
+        Y += int(gy * step)
+        stop = (gx == 0 and gy == 0) or (X == prevvX and Y == prevvY) or i > 1000 or X < 0 or X > 96 or Y < 0 or Y > 66
+        prevvX, prevvY = prevX, prevY
+        prevX, prevY = X, Y
+        subplot.plot(X*10,Y*10,linestyle='None',marker='x',color='black',mew=1)
+    print i
+    
 
 """
 Show stress on the mouse trajectory. data_stress.txt required.
@@ -140,32 +227,24 @@ def showStressGraph():
     #load data
     coords, values, time = loadStressData()
     time = np.array(time, 'float64')
-    #normalize time by the first value and convert to seconds
+    #normalize time by the first value and convert into seconds
     time = (time - time[0])/1000
     smoothDegree = 15
     smoothed = []
     #average over neighboring values
-    for i in range(smoothDegree, len(values) - smoothDegree):
+    for i in range(len(values)):
         neigh = 0
+        count = 0
         for j in range(1,smoothDegree):
-            neigh += values[i-j]
-            neigh += values[i+j]
+            if i-j >= 0:
+                neigh += values[i-j]
+                count += 1
+            if i+j < len(values):
+                neigh += values[i+j]
+                count += 1
         neigh += values[i]
-        neigh /= smoothDegree * 2 + 1
+        neigh /= count + 1
         smoothed.append(neigh)
-
-    avg = sum(smoothed)/len(smoothed)
-    #compute tails heuristically
-    for i in range(smoothDegree):
-        #val = avg
-        #val = (values[i] + avg*3) / 4
-        val = values[i]
-        smoothed.insert(i, val)
-        #val = (values[len(values) - (smoothDegree-i)] + avg*3) / 4
-        val = values[len(values) - (smoothDegree-i)]
-        smoothed.insert(len(smoothed), val)
-    time = time[15:-7]
-    smoothed = smoothed[15:-7]
     #visualize on a new plot
     fig = plt.figure(figsize=(8,3))
     stressplot = fig.add_subplot(1,1,1)
@@ -191,48 +270,6 @@ def loadStressData():
         time.append(int(ln[3]))
     return (coords, values, time)
 
-def visualize():
-    imfile = sys.argv[1]
-    options = sys.argv[2:]
-    clicks = '-c' in options
-    moves = '-m' in options
-    intrmap = '-im' in options
-    intrpts = '-ip' in options
-    compall = '-all' in options
-    stressMap = '-sm' in options
-    stressGraph = '-sg' in options
-
-    image = mpimg.imread(imfile)
-    width, height = len(image[0]), len(image)
-    dx, dy = 10, 10 #spacing of the heatmap
-
-    data = loadData()
-    keys = data.keys()
-
-    fig = plt.figure()
-    sub = fig.add_subplot(1,1,1)
-    plt.axis('off')
-    sub.imshow(image)
-
-    #IDs to compute the features
-    ids = [keys[4]]
-    if compall:
-        ids = keys
-    if clicks:
-        showClicks(data, ids, sub)
-    if moves:
-        showMoves(data, ids, sub)
-    if intrmap:
-        heatmap = showInterestMap(data, ids, sub, width, height, dx, dy)
-    if intrpts:
-        showInterestPoints(sub, heatmap, dx, dy)
-    if stressMap:
-        showStressMap()
-    if stressGraph:
-        showStressGraph()
-    fig.tight_layout()
-    plt.savefig('fig.png', bbox_inches='tight')
-    plt.show()
-
 if __name__ == "__main__":
     visualize()
+
